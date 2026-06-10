@@ -98,7 +98,10 @@ def leaderboard(ctx, task, metric):
     """Print accumulated results leaderboard."""
     from benchmarks.runner import BenchmarkRunner
 
-    runner = BenchmarkRunner(config_path=ctx.obj["config"])
+    runner = BenchmarkRunner(
+        config_path=ctx.obj["config"],
+        datasets_config_path=ctx.obj["datasets_config"],
+    )
     runner.leaderboard(task=task, metric=metric)
 
 

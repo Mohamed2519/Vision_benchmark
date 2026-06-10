@@ -1,52 +1,14 @@
 # -----------------------------------------------------------------------
 # Dataset configuration for the 5 chest X-ray datasets.
 #
-# For each dataset you need:
-#   val_test.csv        : path(s) to CSV file(s) with columns [Path, label]
-#                         pass a list to merge val.csv + test.csv automatically
-#   val_test.image_root : (optional) prefix prepended to relative paths in CSV
-#   golden.images_dir   : folder containing the golden-set images
-#   golden.annotations_dir : folder containing .txt annotation files
+# val_test.csv        : path(s) to CSV file(s) with columns [Path, label]
+#                       pass a list to merge val.csv + test.csv automatically
+# val_test.image_root : (optional) prefix prepended to relative paths in CSV
+# golden.images_dir   : folder containing the golden-set images
+#                       set to null when no golden set exists for this dataset
+# golden.annotations_dir : folder containing .txt annotation files
+#                          set to null when no golden set exists
 # -----------------------------------------------------------------------
-    # DatasetConfig(
-    #       # ← set to None to use full test set
-    
-    # DatasetConfig(
-    #     name="mimic",
-    #     golden_images_dir= None,
-    #     golden_annotations_dir= None,
-    #     val_csv="/mnt/nvme/echonova-vision/dev/pathology_binary_classifier/dataset/mimic/cleaned_data_v3/splits/valid.csv",
-    #     test_csv="/mnt/nvme/echonova-vision/dev/pathology_binary_classifier/dataset/mimic/cleaned_data_v3/splits/test.csv",
-    #     val_sample_n=VAL_SAMPLE_N,
-    #     test_sample_n=TEST_SAMPLE_N,
-    # ),
-    # DatasetConfig(
-    #     name="nih",
-    #     golden_images_dir="/mnt/nvme/echonova-vision/dev/pathology_binary_classifier/dataset/nih/golden_images",
-    #     golden_annotations_dir="/mnt/nvme/echonova-vision/dev/pathology_binary_classifier/dataset/nih/golden_labels",
-    #     val_csv="/mnt/nvme/echonova-vision/dev/pathology_binary_classifier/dataset/nih/cleaned_data_v3/splits/valid.csv",
-    #     test_csv="/mnt/nvme/echonova-vision/dev/pathology_binary_classifier/dataset/nih/cleaned_data_v3/splits/test.csv",
-    #     val_sample_n=VAL_SAMPLE_N,
-    #     test_sample_n=TEST_SAMPLE_N,
-    # ),
-    # DatasetConfig(
-    #     name="padchest",
-    #     golden_images_dir="/mnt/nvme/echonova-vision/dev/pathology_binary_classifier/dataset/padchest/golden_images_padchest",
-    #     golden_annotations_dir="/mnt/nvme/echonova-vision/dev/pathology_binary_classifier/dataset/padchest/golden_labels_padchest",
-    #     val_csv="/mnt/nvme/echonova-vision/dev/pathology_binary_classifier/dataset/padchest/padchest_cleaned_data_v3/splits/valid.csv",
-    #     test_csv="/mnt/nvme/echonova-vision/dev/pathology_binary_classifier/dataset/padchest/padchest_cleaned_data_v3/splits/test.csv",
-    #     val_sample_n=VAL_SAMPLE_N,
-    #     test_sample_n=TEST_SAMPLE_N,
-    # ),
-    # DatasetConfig(
-    #     name="vindr",
-    #     golden_images_dir="/mnt/nvme/echonova-vision/dev/pathology_binary_classifier/dataset/vinDr/golden_images_vinDr",
-    #     golden_annotations_dir="/mnt/nvme/echonova-vision/dev/pathology_binary_classifier/dataset/vinDr/golden_labels_vinDr",
-    #     val_csv="/mnt/nvme/echonova-vision/dev/pathology_binary_classifier/dataset/vinDr/vindr_cleaned_data_v2/splits/valid.csv",
-    #     test_csv="/mnt/nvme/echonova-vision/dev/pathology_binary_classifier/dataset/vinDr/vindr_cleaned_data_v2/splits/test.csv",
-    #     val_sample_n=VAL_SAMPLE_N,
-    #     test_sample_n=TEST_SAMPLE_N,
-    # ),
 
 datasets:
 
@@ -54,8 +16,8 @@ datasets:
     val_test:
       csv:
         - /mnt/nvme/echonova-vision/dev/pathology_binary_classifier/dataset/chexpert/cleaned_data_v3/splits/valid.csv
-        - /mnt/nvme/echonova-vision/dev/pathology_binary_classifier/dataset/chexpert/cleaned_data_v3/splits/valid.csv
-      image_root: null          # set to null if CSV has absolute paths
+        - /mnt/nvme/echonova-vision/dev/pathology_binary_classifier/dataset/chexpert/cleaned_data_v3/splits/test.csv
+      image_root: null
     golden:
       images_dir:      /mnt/nvme/echonova-vision/dev/pathology_binary_classifier/dataset/chexpert/golden_images
       annotations_dir: /mnt/nvme/echonova-vision/dev/pathology_binary_classifier/dataset/chexpert/golden_labels
@@ -67,9 +29,8 @@ datasets:
         - /mnt/nvme/echonova-vision/dev/pathology_binary_classifier/dataset/mimic/cleaned_data_v3/splits/test.csv
       image_root: null
     golden:
-      images_dir:      null
-      annotations_dir: null 
-
+      images_dir:      null   # no golden set for mimic
+      annotations_dir: null
 
   nih:
     val_test:
@@ -78,11 +39,11 @@ datasets:
         - /mnt/nvme/echonova-vision/dev/pathology_binary_classifier/dataset/nih/cleaned_data_v3/splits/test.csv
       image_root: null
     golden:
-      images_dir:      "/mnt/nvme/echonova-vision/dev/pathology_binary_classifier/dataset/nih/golden_images"
-      annotations_dir: "/mnt/nvme/echonova-vision/dev/pathology_binary_classifier/dataset/nih/golden_labels"
+      images_dir:      /mnt/nvme/echonova-vision/dev/pathology_binary_classifier/dataset/nih/golden_images
+      annotations_dir: /mnt/nvme/echonova-vision/dev/pathology_binary_classifier/dataset/nih/golden_labels
 
-  dataset4:
-    padchest:
+  padchest:
+    val_test:
       csv:
         - /mnt/nvme/echonova-vision/dev/pathology_binary_classifier/dataset/padchest/padchest_cleaned_data_v3/splits/valid.csv
         - /mnt/nvme/echonova-vision/dev/pathology_binary_classifier/dataset/padchest/padchest_cleaned_data_v3/splits/test.csv

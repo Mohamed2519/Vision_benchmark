@@ -218,10 +218,10 @@ class Evaluator:
         console.print(f"  val_test : {len(vt_records)} samples")
         vt_results = task.run(model, vt_records, run_id=run_id + "_vt", desc="val+test")
 
-        # --- golden split ---
+        # --- golden split (may be empty if dataset has no golden set) ---
         g_records  = self.loader.load(dataset_name, Split.GOLDEN)
         console.print(f"  golden   : {len(g_records)} samples")
-        g_results  = task.run(model, g_records, run_id=run_id + "_g", desc="golden")
+        g_results  = task.run(model, g_records, run_id=run_id + "_g", desc="golden") if g_records else {"metrics": {}, "predictions": []}
 
         # --- combined AUROC ---
         vt_pairs = [
@@ -236,6 +236,8 @@ class Evaluator:
 
         # --- persist ---
         for split_tag, results in [("val_test", vt_results), ("golden", g_results)]:
+            if not results["predictions"] and split_tag == "golden":
+                continue   # skip empty golden split (dataset has no golden set)
             split_run_id = run_id + ("_vt" if split_tag == "val_test" else "_g")
             metrics_with_combined = {**results["metrics"], "combined_auroc": combined_auroc}
 

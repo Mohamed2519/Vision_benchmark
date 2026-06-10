@@ -63,6 +63,11 @@ class DatasetLoader:
     # ------------------------------------------------------------------
 
     def _load_val_test(self, name: str, dcfg: dict) -> List[SampleRecord]:
+        if "val_test" not in dcfg:
+            raise KeyError(
+                f"Dataset '{name}' is missing the required 'val_test' key in datasets.yaml. "
+                f"Found keys: {list(dcfg.keys())}"
+            )
         vt = dcfg["val_test"]
         csv_paths = vt["csv"] if isinstance(vt["csv"], list) else [vt["csv"]]
         image_root = vt.get("image_root")
@@ -73,9 +78,21 @@ class DatasetLoader:
         )
 
     def _load_golden(self, name: str, dcfg: dict) -> List[SampleRecord]:
-        g = dcfg["golden"]
+        g = dcfg.get("golden", {})
+        images_dir      = g.get("images_dir")
+        annotations_dir = g.get("annotations_dir")
+
+        # Gracefully return empty list when no golden set is configured.
+        if not images_dir or not annotations_dir:
+            import warnings
+            warnings.warn(
+                f"[{name}] No golden set configured (images_dir or annotations_dir is null). "
+                "Skipping golden split — combined AUROC will be computed from val+test only."
+            )
+            return []
+
         return load_golden_split(
-            images_dir=g["images_dir"],
-            annotations_dir=g["annotations_dir"],
+            images_dir=images_dir,
+            annotations_dir=annotations_dir,
             dataset_name=name,
         )
