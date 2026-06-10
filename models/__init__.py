@@ -1,3 +1,3 @@
-from .base import BaseVisionModel
+from .base import ChestXrayModel
 
-__all__ = ["BaseVisionModel"]
+__all__ = ["ChestXrayModel"]

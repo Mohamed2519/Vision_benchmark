@@ -15,7 +15,7 @@ from __future__ import annotations
 from typing import List, Optional
 
 from benchmarks.registry import ModelRegistry
-from models.chest_xray.base_model import ChestXrayModel
+from models.base import ChestXrayModel
 
 CHECKPOINT_PATH = (
     "/mnt/nvme/echonova-vision/dev/pathology_binary_classifier/checkpoints/"
@@ -44,8 +44,7 @@ class SwinB512(ChestXrayModel):
         threshold: float = 0.5,
     ):
         super().__init__(device=device or "cpu")
-
-        from models.chest_xray.inference import PathologyClassifier
+        from models.inference import PathologyClassifier
 
         self._clf = PathologyClassifier(
             checkpoint_path=checkpoint_path,

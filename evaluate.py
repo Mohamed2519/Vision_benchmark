@@ -96,7 +96,7 @@ def run_all(ctx, device, batch_size, threshold):
         config_path=ctx.obj["config"],
         datasets_config=ctx.obj["datasets_config"],
     )
-    ModelRegistry.autodiscover(package="models.chest_xray")
+    ModelRegistry.autodiscover(package="models")
     model_names   = ModelRegistry.list_models()
     dataset_names = evaluator.loader.dataset_names()
 
@@ -207,7 +207,7 @@ class Evaluator:
         console.rule(f"[bold cyan]{model_name}  ×  {dataset_name}  [{run_id}]")
 
         # --- Load model ---
-        ModelRegistry.autodiscover(package="models.chest_xray")
+        ModelRegistry.autodiscover(package="models")
         model_cls = ModelRegistry.get(model_name)
         model     = model_cls(**model_kwargs)
 

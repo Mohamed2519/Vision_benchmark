@@ -1,32 +1,33 @@
 """
-CONVNEXT_V2 — ConvNeXt-Base trained on unified_data_v1 (unified_v3clean split).
+SWIN_B — Swin Transformer-B trained on vinDr + CheXpert + NIH + PadChest + MIMIC.
 
 Checkpoint
 ----------
     /mnt/nvme/echonova-vision/dev/pathology_binary_classifier/checkpoints/
-    unified_data_v1/convnext_base_unified_data_v1_unified_v3clean/best_model.pth
+    vinDr-chexpert-nih-padchest-mimic/swin_b_vinDr-chexpert-nih-padchest-mimic/best_model.pth
 
-Registration name : "CONVNEXT_V2"
-Architecture      : convnext_base
+Registration name : "SWIN_B"
+Architecture      : swin_b
 """
 from __future__ import annotations
 
-from pathlib import Path
 from typing import List, Optional
 
 from benchmarks.registry import ModelRegistry
-from models.chest_xray.base_model import ChestXrayModel
+from models.base import ChestXrayModel
 
 CHECKPOINT_PATH = (
     "/mnt/nvme/echonova-vision/dev/pathology_binary_classifier/checkpoints/"
-    "unified_data_v1/convnext_base_unified_data_v1_unified_v3clean/best_model.pth"
+    "vinDr-chexpert-nih-padchest-mimic/"
+    "swin_b_vinDr-chexpert-nih-padchest-mimic/best_model.pth"
 )
 
 
-@ModelRegistry.register("CONVNEXT_V2")
-class ConvNextV2(ChestXrayModel):
+@ModelRegistry.register("SWIN_B")
+class SwinB(ChestXrayModel):
     """
-    ConvNeXt-Base binary chest X-ray classifier (unified_data_v1 / v3clean).
+    Swin Transformer-B binary chest X-ray classifier
+    (vinDr + CheXpert + NIH + PadChest + MIMIC).
 
     Parameters
     ----------
@@ -42,14 +43,13 @@ class ConvNextV2(ChestXrayModel):
         threshold: float = 0.5,
     ):
         super().__init__(device=device or "cpu")
-
-        from models.chest_xray.inference import PathologyClassifier
+        from models.inference import PathologyClassifier
 
         self._clf = PathologyClassifier(
             checkpoint_path=checkpoint_path,
             device=device,
             threshold=threshold,
-            architecture="convnext_base",
+            architecture="swin_b",
         )
 
     def predict_batch(self, image_paths: List[str]) -> List[dict]:
@@ -58,4 +58,4 @@ class ConvNextV2(ChestXrayModel):
 
     @property
     def name(self) -> str:
-        return "CONVNEXT_V2"
+        return "SWIN_B"

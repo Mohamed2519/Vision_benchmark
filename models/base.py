@@ -1,51 +1,40 @@
 """
-Base class every vision model must implement.
+Base class every chest X-ray model must implement.
 
-To add a new model:
-1. Create a file in models/ (e.g. models/my_model.py)
-2. Subclass BaseVisionModel and implement predict()
-3. Decorate the class with @ModelRegistry.register("my_model")
-4. That's it — the runner will auto-discover it.
+To add a new model
+------------------
+1. Create a file in  models/  (e.g. my_model.py)
+2. Subclass ChestXrayModel and implement predict_batch()
+3. Decorate the class with @ModelRegistry.register("MY_MODEL")
+4. Done — the runner auto-discovers all files in models/
+
+predict_batch contract
+----------------------
+Input  : List[str]  — absolute paths to image files
+Output : List[dict] — one dict per image:
+    score : float  — probability of ABNORMAL class, in [0, 1]
+    label : int    — hard prediction (0 = normal, 1 = abnormal)
+                     may be omitted; evaluator derives it from score >= 0.5
 """
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import List
 
-import numpy as np
 from PIL import Image
 
 
-class BaseVisionModel(ABC):
-    """
-    Minimal interface every benchmarked model must satisfy.
-
-    Parameters
-    ----------
-    device : str
-        'cuda', 'cpu', or 'mps'
-    """
-
+class ChestXrayModel(ABC):
     def __init__(self, device: str = "cpu"):
         self.device = device
 
     @abstractmethod
-    def predict(self, images: List[Image.Image]) -> List[dict]:
-        """
-        Run inference on a batch of PIL images.
+    def predict_batch(self, image_paths: List[str]) -> List[dict]:
+        """Return [{"score": float, "label": int}, ...] for each image path."""
 
-        Returns
-        -------
-        list of dict, one per image.
-        Each dict must have at minimum:
-            label  : str   — top predicted class name
-            conf   : float — confidence in [0, 1]
-            probs  : dict  — {class_name: probability, ...}  (optional but recommended)
-        """
-
-    def preprocess(self, image: Image.Image) -> Image.Image:
-        """Optional preprocessing hook. Override to customise."""
-        return image
+    def load_image(self, path: str) -> Image.Image:
+        return Image.open(path).convert("RGB")
 
     @property
     def name(self) -> str:

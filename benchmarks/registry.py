@@ -5,8 +5,8 @@ Usage
 -----
 from benchmarks.registry import ModelRegistry
 
-@ModelRegistry.register("my_model")
-class MyModel(BaseVisionModel):
+@ModelRegistry.register("MY_MODEL")
+class MyModel(ChestXrayModel):
     ...
 """
 from __future__ import annotations
@@ -16,16 +16,16 @@ import pkgutil
 from pathlib import Path
 from typing import Dict, Type
 
-from models.base import BaseVisionModel
+from models.base import ChestXrayModel
 
 
 class ModelRegistry:
-    _registry: Dict[str, Type[BaseVisionModel]] = {}
+    _registry: Dict[str, Type[ChestXrayModel]] = {}
 
     @classmethod
     def register(cls, name: str):
         """Decorator that registers a model class under *name*."""
-        def decorator(model_cls: Type[BaseVisionModel]):
+        def decorator(model_cls: Type[ChestXrayModel]):
             if name in cls._registry:
                 raise ValueError(f"Model '{name}' is already registered.")
             cls._registry[name] = model_cls
@@ -33,7 +33,7 @@ class ModelRegistry:
         return decorator
 
     @classmethod
-    def get(cls, name: str) -> Type[BaseVisionModel]:
+    def get(cls, name: str) -> Type[ChestXrayModel]:
         if name not in cls._registry:
             raise KeyError(
                 f"Model '{name}' not found. Available: {list(cls._registry)}"
@@ -47,7 +47,7 @@ class ModelRegistry:
     @classmethod
     def autodiscover(cls, package: str = "models") -> None:
         """Import every module inside *package* so decorators fire."""
-        pkg_path = Path(__file__).parent.parent / package
+        pkg_path = Path(__file__).parent.parent / package.replace(".", "/")
         for _, module_name, _ in pkgutil.iter_modules([str(pkg_path)]):
             if not module_name.startswith("_"):
                 importlib.import_module(f"{package}.{module_name}")
