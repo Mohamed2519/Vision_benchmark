@@ -19,6 +19,8 @@ class ClassificationTask:
         self.cfg = cfg
         self.batch_size = cfg.get("batch_size", 32)
         self.top_k = cfg.get("top_k", [1, 5])
+        self._dataset_loader = None
+        self._configured_dataset_names = None
 
     # ------------------------------------------------------------------
     # Public
@@ -63,13 +65,44 @@ class ClassificationTask:
     def _load_dataset(self, dataset: str, split: str, model):
         """
         Supports:
+        - Configured dataset names from configs/datasets.yaml
         - HuggingFace dataset hub IDs  e.g. 'cifar10', 'food101'
         - Local folders with ImageFolder layout  e.g. '/data/my_dataset'
         """
+        configured_dataset = self._load_configured_dataset(dataset)
+        if configured_dataset is not None:
+            return configured_dataset
+
         if Path(dataset).exists():
             return self._load_imagefolder(dataset, split)
         else:
             return self._load_hf_dataset(dataset, split)
+
+    def _load_configured_dataset(self, dataset_name: str):
+        from datasets.base import Split
+        from datasets.loader import DatasetLoader
+
+        if self._dataset_loader is None:
+            datasets_config = self.cfg.get("datasets_config", "configs/datasets.yaml")
+            try:
+                self._dataset_loader = DatasetLoader(datasets_config)
+                self._configured_dataset_names = set(self._dataset_loader.dataset_names())
+            except (FileNotFoundError, KeyError):
+                return None
+
+        if dataset_name not in self._configured_dataset_names:
+            return None
+
+        records = self._dataset_loader.load(dataset_name, Split.VAL_TEST)
+        images, labels, paths = [], [], []
+        for record in records:
+            img_path = str(record.image_path)
+            img = Image.open(img_path).convert("RGB")
+            images.append(img)
+            labels.append(str(record.label))
+            paths.append(img_path)
+
+        return images, labels, paths
 
     def _load_hf_dataset(self, name: str, split: str):
         from datasets import load_dataset

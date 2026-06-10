@@ -4,11 +4,11 @@ Vision Benchmark CLI
 
 Usage examples
 --------------
-# Run a single model
-python benchmark.py run resnet50_timm --dataset cifar10 --split test
+# Run all registered models on all configured datasets (GPU by default)
+python benchmark.py run
 
-# Run multiple models in sequence
-python benchmark.py run resnet50_timm vit_base_timm --dataset cifar10
+# Run a single model on one dataset
+python benchmark.py run resnet50_timm --dataset cifar10 --split test
 
 # Show the leaderboard
 python benchmark.py leaderboard
@@ -24,32 +24,70 @@ console = Console()
 
 @click.group()
 @click.option("--config", default="configs/default.yaml", show_default=True, help="Path to config YAML")
+@click.option("--datasets-config", default="configs/datasets.yaml", show_default=True, help="Path to datasets YAML")
 @click.pass_context
-def cli(ctx, config):
+def cli(ctx, config, datasets_config):
     ctx.ensure_object(dict)
     ctx.obj["config"] = config
+    ctx.obj["datasets_config"] = datasets_config
+
+
+def _resolve_models(models):
+    if models:
+        return list(models)
+
+    from benchmarks.registry import ModelRegistry
+
+    ModelRegistry.autodiscover()
+    model_names = ModelRegistry.list_models()
+    if not model_names:
+        raise click.ClickException("No registered models found.")
+    return model_names
+
+
+def _resolve_datasets(dataset, datasets_config):
+    if dataset:
+        return [dataset]
+
+    from datasets.loader import DatasetLoader
+
+    dataset_names = DatasetLoader(datasets_config).dataset_names()
+    if not dataset_names:
+        raise click.ClickException(f"No datasets found in config: {datasets_config}")
+    return dataset_names
 
 
 @cli.command()
-@click.argument("models", nargs=-1, required=True)
-@click.option("--dataset", required=True, help="HuggingFace dataset ID or local ImageFolder path")
+@click.argument("models", nargs=-1, required=False)
+@click.option(
+    "--dataset",
+    required=False,
+    help="Dataset to benchmark (configured name, HuggingFace ID, or local ImageFolder path). Default: all configured datasets.",
+)
 @click.option("--split", default="test", show_default=True)
 @click.option("--task", default="classification", show_default=True, type=click.Choice(["classification"]))
-@click.option("--device", default="cpu", show_default=True)
+@click.option("--device", default="cuda", show_default=True)
 @click.pass_context
 def run(ctx, models, dataset, split, task, device):
-    """Run benchmark for one or more models."""
+    """Run benchmark for one or more models on one or more datasets."""
     from benchmarks.runner import BenchmarkRunner
 
-    runner = BenchmarkRunner(config_path=ctx.obj["config"])
-    for model_name in models:
-        runner.run(
-            model_name=model_name,
-            dataset=dataset,
-            split=split,
-            task=task,
-            model_kwargs={"device": device},
-        )
+    runner = BenchmarkRunner(
+        config_path=ctx.obj["config"],
+        datasets_config_path=ctx.obj["datasets_config"],
+    )
+    model_names = _resolve_models(models)
+    dataset_names = _resolve_datasets(dataset, ctx.obj["datasets_config"])
+
+    for model_name in model_names:
+        for dataset_name in dataset_names:
+            runner.run(
+                model_name=model_name,
+                dataset=dataset_name,
+                split=split,
+                task=task,
+                model_kwargs={"device": device},
+            )
 
 
 @cli.command()

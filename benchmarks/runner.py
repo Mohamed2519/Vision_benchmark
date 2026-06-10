@@ -25,9 +25,14 @@ TASK_MAP = {
 
 
 class BenchmarkRunner:
-    def __init__(self, config_path: str = "configs/default.yaml"):
+    def __init__(
+        self,
+        config_path: str = "configs/default.yaml",
+        datasets_config_path: str = "configs/datasets.yaml",
+    ):
         with open(config_path) as f:
             self.cfg = yaml.safe_load(f)
+        self.datasets_config_path = datasets_config_path
         self.store = ResultStore(
             str(Path(self.cfg["benchmark"]["output_dir"]) / "results.db")
         )
@@ -51,7 +56,8 @@ class BenchmarkRunner:
         model = model_cls(**model_kwargs)
 
         # --- Run task ---
-        task_cfg = self.cfg["tasks"].get(task, {})
+        task_cfg = dict(self.cfg["tasks"].get(task, {}))
+        task_cfg.setdefault("datasets_config", self.datasets_config_path)
         task_runner = TASK_MAP[task](cfg=task_cfg)
         results = task_runner.run(model=model, dataset=dataset, split=split, run_id=run_id)
 
