@@ -126,6 +126,23 @@ def leaderboard(ctx, sort_by):
     evaluator.print_leaderboard(sort_by=sort_by)
 
 
+@cli.command("report")
+@click.option("--out", default="results/benchmark_report.html", show_default=True,
+              help="Output HTML file path.")
+@click.option("--title", default="Chest X-Ray Benchmark Report", show_default=True)
+@click.pass_context
+def report_cmd(ctx, out, title):
+    """Generate an interactive HTML benchmark report."""
+    import subprocess, sys
+    subprocess.run([
+        sys.executable, "reports/generate_report.py",
+        "--db", f"{yaml.safe_load(open(ctx.obj['config']))['benchmark']['output_dir']}/results.db",
+        "--out", out,
+        "--title", title,
+    ], check=True)
+    console.print(f"[bold green]Report ready → {out}[/]")
+
+
 @cli.command("error-report")
 @click.argument("run_id")
 @click.pass_context
