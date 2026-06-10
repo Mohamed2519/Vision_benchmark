@@ -20,6 +20,9 @@ pip install -e .
 ### Run a benchmark
 
 ```bash
+# All registered models × all configured datasets (configs/datasets.yaml) on GPU
+python benchmark.py run
+
 # HuggingFace dataset
 python benchmark.py run resnet50_timm --dataset cifar10 --split test
 
