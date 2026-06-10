@@ -1,0 +1,37 @@
+# Default benchmark configuration
+benchmark:
+  name: "vision_benchmark"
+  output_dir: "results"
+  accumulate_results: true   # append to existing results DB
+
+wandb:
+  enabled: true
+  project: "vision-benchmark"
+  entity: null               # set to your W&B username/org
+  log_images: true
+  log_confusion_matrix: true
+  max_images_logged: 50
+
+tasks:
+  classification:
+    enabled: true
+    top_k: [1, 5]
+    batch_size: 32
+    num_workers: 4
+
+  detection:
+    enabled: false
+    iou_thresholds: [0.5, 0.75]
+    batch_size: 8
+    num_workers: 4
+
+  segmentation:
+    enabled: false
+    batch_size: 4
+    num_workers: 4
+
+error_analysis:
+  enabled: true
+  top_n_failures: 20          # worst failures to surface
+  confidence_bins: 10
+  per_class_breakdown: true
