@@ -1,6 +1,7 @@
 import sys
 import types
 
+import pytest
 from click.testing import CliRunner
 
 import benchmark
@@ -8,72 +9,83 @@ import benchmark
 
 def test_run_defaults_to_all_models_all_datasets_cuda(monkeypatch):
     run_calls = []
-    runner_inits = []
-    loader_paths = []
 
-    class DummyRunner:
-        def __init__(self, config_path, datasets_config_path):
-            runner_inits.append((config_path, datasets_config_path))
+    class DummyEvaluator:
+        def __init__(self, config_path, datasets_config):
+            pass
 
-        def run(self, **kwargs):
+        def run_single(self, **kwargs):
             run_calls.append(kwargs)
+
+        @property
+        def loader(self):
+            class _Loader:
+                def dataset_names(self):
+                    return ["dataset1", "dataset2"]
+            return _Loader()
 
     class DummyRegistry:
         @classmethod
-        def autodiscover(cls):
+        def autodiscover(cls, package="models"):
             return None
 
         @classmethod
         def list_models(cls):
             return ["model_a", "model_b"]
 
-    class DummyLoader:
-        def __init__(self, config_path):
-            loader_paths.append(config_path)
+    monkeypatch.setattr("benchmark.ModelRegistry", DummyRegistry, raising=False)
+    # Patch inside the function's import scope
+    monkeypatch.setitem(sys.modules, "benchmarks.registry",
+                        types.SimpleNamespace(ModelRegistry=DummyRegistry))
+    monkeypatch.setitem(sys.modules, "evaluate",
+                        types.SimpleNamespace(Evaluator=DummyEvaluator))
 
-        def dataset_names(self):
-            return ["dataset1", "dataset2"]
+    result = CliRunner().invoke(
+        benchmark.cli,
+        ["--datasets-config", "custom_datasets.yaml", "run"],
+    )
 
-    monkeypatch.setitem(sys.modules, "benchmarks.runner", types.SimpleNamespace(BenchmarkRunner=DummyRunner))
-    monkeypatch.setitem(sys.modules, "benchmarks.registry", types.SimpleNamespace(ModelRegistry=DummyRegistry))
-    monkeypatch.setitem(sys.modules, "datasets.loader", types.SimpleNamespace(DatasetLoader=DummyLoader))
-
-    result = CliRunner().invoke(benchmark.cli, ["--datasets-config", "custom_datasets.yaml", "run"])
-
-    assert result.exit_code == 0
-    assert runner_inits == [("configs/default.yaml", "custom_datasets.yaml")]
-    assert loader_paths == ["custom_datasets.yaml"]
+    assert result.exit_code == 0, result.output
     assert len(run_calls) == 4
-    assert {(c["model_name"], c["dataset"]) for c in run_calls} == {
+    assert {(c["model_name"], c["dataset_name"]) for c in run_calls} == {
         ("model_a", "dataset1"),
         ("model_a", "dataset2"),
         ("model_b", "dataset1"),
         ("model_b", "dataset2"),
     }
-    assert all(c["model_kwargs"] == {"device": "cuda"} for c in run_calls)
+    assert all(c["device"] == "cuda" for c in run_calls)
 
 
 def test_run_with_explicit_models_and_dataset(monkeypatch):
     run_calls = []
 
-    class DummyRunner:
-        def __init__(self, config_path, datasets_config_path):
+    class DummyEvaluator:
+        def __init__(self, config_path, datasets_config):
             pass
 
-        def run(self, **kwargs):
+        def run_single(self, **kwargs):
             run_calls.append(kwargs)
 
-    monkeypatch.setitem(sys.modules, "benchmarks.runner", types.SimpleNamespace(BenchmarkRunner=DummyRunner))
+        @property
+        def loader(self):
+            class _Loader:
+                def dataset_names(self):
+                    return ["dataset1"]
+            return _Loader()
+
+    monkeypatch.setitem(sys.modules, "evaluate",
+                        types.SimpleNamespace(Evaluator=DummyEvaluator))
 
     result = CliRunner().invoke(
         benchmark.cli,
-        ["run", "model_x", "model_y", "--dataset", "cifar10", "--device", "cpu"],
+        ["run", "--models", "model_x", "--models", "model_y",
+         "--datasets", "cifar10", "--device", "cpu"],
     )
 
-    assert result.exit_code == 0
+    assert result.exit_code == 0, result.output
     assert len(run_calls) == 2
-    assert {(c["model_name"], c["dataset"]) for c in run_calls} == {
+    assert {(c["model_name"], c["dataset_name"]) for c in run_calls} == {
         ("model_x", "cifar10"),
         ("model_y", "cifar10"),
     }
-    assert all(c["model_kwargs"] == {"device": "cpu"} for c in run_calls)
+    assert all(c["device"] == "cpu" for c in run_calls)

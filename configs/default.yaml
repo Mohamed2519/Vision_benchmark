@@ -32,6 +32,6 @@ tasks:
 
 error_analysis:
   enabled: true
-  top_n_failures: 50          # worst failures to surface
+  top_n_failures: 100         # worst failures to surface
   confidence_bins: 10
   per_class_breakdown: true
