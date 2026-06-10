@@ -7,7 +7,7 @@ benchmark:
 wandb:
   enabled: true
   project: "vision-benchmark"
-  entity: null               # set to your W&B username/org
+  entity: m-yasser               # set to your W&B username/org
   log_images: true
   log_confusion_matrix: true
   max_images_logged: 50
