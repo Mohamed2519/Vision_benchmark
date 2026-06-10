@@ -161,5 +161,5 @@ class ErrorAnalyzer:
             table.add_column("Predicted", style="red")
             table.add_column("Count", style="cyan")
             for pair in report["confusion_pairs"][:10]:
-                table.add_row(pair["true"], pair["pred"], str(pair["count"]))
+                table.add_row(str(pair["true"]), str(pair["pred"]), str(pair["count"]))
             console.print(table)
