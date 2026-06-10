@@ -87,13 +87,12 @@ class ErrorAnalyzer:
         return sorted(rows, key=lambda r: r["accuracy"])
 
     def _top_failures(self) -> List[Dict]:
-        n = self.cfg.get("top_n_failures", 20)
+        n = self.cfg.get("top_n_failures", 50)
         failures = self.df[self.df["correct"] == 0].copy()
         # Sort by confidence descending — high-confidence wrong = most egregious
         failures = failures.sort_values("confidence", ascending=False)
-        return failures.head(n)[
-            ["sample_id", "image_path", "label", "pred", "confidence"]
-        ].to_dict("records")
+        cols = [c for c in ["sample_id", "image_path", "label", "pred", "confidence"] if c in failures.columns]
+        return failures.head(n)[cols].to_dict("records")
 
     def _confusion_pairs(self, top_n: int = 20) -> List[Dict]:
         failures = self.df[self.df["correct"] == 0]
